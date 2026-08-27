@@ -118,3 +118,42 @@ def test_window_mismatch_at_position_fails(tmp_path):
     assert any(
         "windows" in diff and "8192" in diff and "4096" in diff for _, diff in report.failed
     )
+
+
+# A real vectors/v1 directory (Task 4/5) is a MANIFEST.json-bearing directory
+# holding several vector files side by side. None of the tests above exercise
+# that shape — each writes exactly one vector file and no MANIFEST.json. This
+# pins the multi-vector, MANIFEST-present case so check.py's actual target
+# shape has direct coverage rather than relying on manual smoke-testing.
+def multi_vector_dir_with_manifest(tmp_path):
+    (tmp_path / "model-a.json").write_text(json.dumps(dict(VECTOR, id="model-a")))
+    (tmp_path / "model-b.json").write_text(
+        json.dumps(
+            {
+                "id": "model-b",
+                "source": {"gguf_sha256": "b" * 64, "provenance": "doc"},
+                "metadata": {"general.architecture": "llama"},
+                "expected": {"kv_bytes_per_token": 4096, "experts": None},
+                "verification": "derived",
+            }
+        )
+    )
+    # Deliberately NOT vector-shaped (no "id" key) -- if check.py ever stopped
+    # skipping MANIFEST.json by name, loading this file as a vector would
+    # raise KeyError on vector["id"] rather than silently misbehaving.
+    (tmp_path / "MANIFEST.json").write_text(
+        json.dumps({"set_version": "test", "files": {"model-a.json": "x", "model-b.json": "y"}})
+    )
+    return tmp_path
+
+
+def test_manifest_json_is_skipped_in_a_multi_vector_directory(tmp_path):
+    report = check.compare(
+        {
+            "model-a": {"kv_bytes_per_token": 57344, "experts": None},
+            "model-b": {"kv_bytes_per_token": 4096, "experts": None},
+        },
+        multi_vector_dir_with_manifest(tmp_path),
+    )
+    assert sorted(report.passed) == ["model-a", "model-b"]
+    assert not report.failed and not report.uncovered
