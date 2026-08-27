@@ -418,7 +418,7 @@ These are the ONLY windows scenarios in v1 (they exercise R7's three binding ter
 4. `codegemma-7b-instruct-q8_0` — AFFECTED. Corrected kv per errata (expect 448 KiB = **458752**; verify); `must_not_equal.kv_bytes_per_token` = the old-formula value (expect 336 KiB = 344064; copy from errata), note `"E1: embedding//head_count head_dim; corrected by R1 key_length rule"`.
 5. `gemma2-9b` — AFFECTED, window HELD case. Corrected kv 336 KiB (verify vs errata); must_not_equal old 294 KiB value.
 6. `mistral-nemo-latest` — AFFECTED, the under-promise sign. Corrected kv 160 KiB; must_not_equal old 200 KiB. Provenance notes the direction (window 32711→40889 under-promised).
-7. `qwen3.8-27b` — AFFECTED (16.8% window over-promise); corrected kv from errata; must_not_equal old value.
+7. ~~`qwen3.8-27b` — AFFECTED (16.8% window over-promise); corrected kv from errata; must_not_equal old value.~~ **WITHHELD — amended 2026-08-27 after Task 4 surfaced the conflict.** Its metadata states `full_attention_interval: 4`, `nextn_predict_layers: 1` and a full `ssm.*` set, so R3/R4/R6 apply; the errata's corrected 260 KiB (266240 B) charges all 65 raw blocks, a 4.06x attention over-charge against R3+R6, with R4's term uncharged. Pinning it would freeze the defect as the contract; deriving the conforming value here is banned. Filed as `docs/upstream-errata/2026-08-27-assay-qwen3.8-27b-hybrid-overcharge.md`; v1 ships **eight** E1 vectors, and R3/R4/R6 are covered by Task 5's hybrid instead.
 8. `deepseek-coder-v2-16b-lite-instruct-q5_K_M` — AFFECTED + real MoE. Corrected kv from errata (33.3% window over-promise case); `experts: {"count": 64, "used": 6}`; must_not_equal old kv.
 9. `gemma-4-12b-it-qat-q4_0-latest` — the R8 refusal case: e1-sweep classified it geometry:null (stated 512 vs derived 240, keys insufficient). `expected: {"refuses": true}`; provenance cites the results.json classification.
 
@@ -438,10 +438,10 @@ V1 = Path(__file__).resolve().parents[1] / "vectors" / "v1"
 EXPECTED_IDS = {
     "qwen2.5-coder-7b-instruct-q8_0", "qwen2.5-coder-14b-instruct-q4_K_M",
     "qwen2.5-coder-1.5b-instruct-q8_0", "codegemma-7b-instruct-q8_0",
-    "gemma2-9b", "mistral-nemo-latest", "qwen3.8-27b",
+    "gemma2-9b", "mistral-nemo-latest",
     "deepseek-coder-v2-16b-lite-instruct-q5_K_M",
     "gemma-4-12b-it-qat-q4_0-latest",
-}
+}  # amended 2026-08-27: qwen3.8-27b withheld, see item 7
 
 
 def load(vid):
@@ -466,7 +466,7 @@ def test_anchor_values_pinned():
 
 def test_every_affected_vector_carries_must_not_equal():
     for vid in ["codegemma-7b-instruct-q8_0", "gemma2-9b", "mistral-nemo-latest",
-                "qwen3.8-27b", "deepseek-coder-v2-16b-lite-instruct-q5_K_M"]:
+                "deepseek-coder-v2-16b-lite-instruct-q5_K_M"]:
         assert "must_not_equal" in load(vid), vid
 
 
@@ -481,13 +481,13 @@ def test_windows_only_on_the_designated_vector():
 
 - [ ] **Step 2: Run, verify failure** — vectors don't exist yet.
 
-- [ ] **Step 3: Author the nine vectors** per the recipe. For each: open the show file, copy the geometry-relevant `model_info` keys verbatim; copy corrected values from errata/CHANGELOG with the citation in `provenance`. **Discipline: if any anchor value in this plan disagrees with the evidence file, the evidence wins — stop, correct the plan value in the test, and record the discrepancy in the commit message.** Run `python3 tools/gen_manifest.py vectors/v1` after authoring.
+- [ ] **Step 3: Author the eight vectors** (nine as planned, minus the withheld item 7) per the recipe. For each: open the show file, copy the geometry-relevant `model_info` keys verbatim; copy corrected values from errata/CHANGELOG with the citation in `provenance`. **Discipline: if any anchor value in this plan disagrees with the evidence file, the evidence wins — stop, correct the plan value in the test, and record the discrepancy in the commit message.** Run `python3 tools/gen_manifest.py vectors/v1` after authoring.
 
 - [ ] **Step 4: Run tests, verify pass** — `PYTHONDONTWRITEBYTECODE=1 python3 -m pytest tests/ -q` → all green.
 
-- [ ] **Step 5: Cross-check with the checker** — build a tiny results file by hand from two vectors' expected values, run `python3 tools/check.py /tmp/spot.json vectors/v1`, confirm 2 PASS + 7 UNCOVERED, exit 0. Then corrupt one value, confirm FAIL + exit 1. (This is the checker's first run against real vectors — an end-to-end smoke, not a substitute for Task 3's tests.)
+- [ ] **Step 5: Cross-check with the checker** — build a tiny results file by hand from two vectors' expected values, run `python3 tools/check.py /tmp/spot.json vectors/v1`, confirm 2 PASS + 6 UNCOVERED (7 as planned, minus the withheld item 7), exit 0. Then corrupt one value, confirm FAIL + exit 1. (This is the checker's first run against real vectors — an end-to-end smoke, not a substitute for Task 3's tests.)
 
-- [ ] **Step 6: Commit** — `git add vectors/ tests/test_v1_vectors.py && git commit -m "feat: v1 vectors — E1 attention corpus (9 models, provenance-cited)"`
+- [ ] **Step 6: Commit** — `git add vectors/ tests/test_v1_vectors.py && git commit -m "feat: v1 vectors — E1 attention corpus (8 models, provenance-cited)"`
 
 ---
 
@@ -548,7 +548,7 @@ python3 tools/validate_vectors.py vectors/v1
 ```
 Expected: all green, exit 0.
 
-- [ ] **Step 6: Commit** — `git commit -am "feat: v1 vectors — REAP-48 hybrid + mtp trap (11 vectors total)"`
+- [ ] **Step 6: Commit** — `git commit -am "feat: v1 vectors — REAP-48 hybrid + mtp trap (10 vectors total)"`
 
 ---
 

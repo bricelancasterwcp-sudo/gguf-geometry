@@ -6,6 +6,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 import validate_vectors  # noqa: E402
 
 V1 = Path(__file__).resolve().parents[1] / "vectors" / "v1"
+WITHHELD_ERRATUM = (
+    Path(__file__).resolve().parents[1]
+    / "docs" / "upstream-errata"
+    / "2026-08-27-assay-qwen3.8-27b-hybrid-overcharge.md"
+)
 
 EXPECTED_IDS = {
     "qwen2.5-coder-7b-instruct-q8_0", "qwen2.5-coder-14b-instruct-q4_K_M",
@@ -16,7 +21,9 @@ EXPECTED_IDS = {
 }
 
 # The ninth planned vector, `qwen3.8-27b`, is deliberately NOT in v1 — see
-# test_qwen38_27b_is_deliberately_absent for the reason and the evidence.
+# test_qwen38_27b_is_deliberately_absent for the reason and the evidence,
+# and WITHHELD_ERRATUM for the filed record. Ruled 2026-08-27: a documented
+# v1 scope reduction (design spec section 4, plan Task 4 item 7).
 WITHHELD_IDS = {"qwen3.8-27b"}
 
 
@@ -61,10 +68,30 @@ def test_qwen38_27b_is_deliberately_absent():
     later set rather than entering as an unverified number. Adding it back
     with the 260 KiB figure would pin, as the contract, the very defect this
     repo exists to catch.
+
+    Ruled 2026-08-27 as a documented v1 scope reduction; the reason is filed
+    at WITHHELD_ERRATUM and recorded in design spec section 4.
     """
     present = {p.stem for p in V1.glob("*.json")} - {"MANIFEST"}
     assert present & WITHHELD_IDS == set()
     assert present == EXPECTED_IDS
+
+
+def test_withheld_ids_are_documented():
+    """A withheld case is only defensible while its reason stays published.
+
+    Pins the filed erratum: it must name every withheld id, the published
+    figure that must not be pinned as `expected` (266240 bytes = 260
+    KiB/token), and the three rules the figure conflicts with. Deleting or
+    hollowing out the record turns a ruled scope reduction back into an
+    unexplained gap, so the corpus fails instead.
+    """
+    text = WITHHELD_ERRATUM.read_text()
+    for vid in WITHHELD_IDS:
+        assert vid in text, vid
+    assert "266240" in text
+    for rule in ("R3", "R4", "R6"):
+        assert rule in text, rule
 
 
 def test_windows_only_on_the_designated_vector():

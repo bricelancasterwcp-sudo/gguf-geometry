@@ -56,6 +56,14 @@ live run measured it) or `derived` (computed in a published, reviewed
 doc). No number in this repo is computed here — copying a number into a
 vector is not deriving it.
 
+**A case with no honest number stays out, on the record.** When published
+evidence for a model contradicts SPEC.md, the vector is withheld rather
+than pinned at the contradicting value — pinning it would freeze the
+defect as the contract. Withheld cases are filed in
+[`docs/upstream-errata/`](docs/upstream-errata/) with the evidence, the
+rule they conflict with, and what would close them; the test suite pins
+both the absence and its record.
+
 ## Consumer model
 
 1. Vendor a sha-pinned copy of `vectors/v1/` into your own repo.

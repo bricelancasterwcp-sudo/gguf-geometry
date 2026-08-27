@@ -137,8 +137,21 @@ Rules:
 - **The E1 sweep** (assay `docs/superpowers/evidence/e1-sweep/`):
   23 profiles with raw `show-*.json` metadata, pre-registered protocol,
   corrected derivations, and four values hardware-verified in the v1.7
-  campaign. Covers: 6 affected (both signs), 1 explained inconsistency,
-  the geometry:null edge (gemma-4).
+  campaign. Covers 5 of the sweep's 6 affected models — 4 carrying a
+  corrected kv plus the old value as `must_not_equal` (both signs:
+  mistral-nemo under-promised, the rest over-promised), and gemma-4,
+  which is affected *and* is the geometry:null edge, entering as the R8
+  refusal — plus 3 unaffected controls.
+  **Withheld (ruled 2026-08-27): `qwen3.8:27b`.** Its published 260
+  KiB/token charges all 65 raw blocks against metadata that states
+  `full_attention_interval`, `nextn_predict_layers` and `ssm.*`, so
+  R3/R4/R6 all apply and pinning the published figure would freeze a
+  4.06x over-charge *as the contract*. Deriving the conforming value
+  here is banned (section 0), so the case waits for a conforming
+  measurement or an upstream correction. Filed as
+  [`docs/upstream-errata/2026-08-27-assay-qwen3.8-27b-hybrid-overcharge.md`](../../upstream-errata/2026-08-27-assay-qwen3.8-27b-hybrid-overcharge.md);
+  pinned by `tests/test_v1_vectors.py`. The E1 corpus alone therefore
+  exercises R1/R2/R5/R7/R8; R3/R4/R6 arrive with the hybrid below.
 - **The hybrid case**: Qwen3.6-35B-A3B REAP-48 (bloomery turn-5
   evidence: `attention_layers` 10, kv 20,480 B/tok, recurrent
   65,863,680 B — hardware-verified across two boots).
