@@ -102,7 +102,7 @@ incomparable, not wrong).
     "recurrent_state_bytes": 65863680,
     "experts": { "count": 133, "used": 8 },
     "windows": [
-      { "terms": { "budget_bytes": 0, "weights_bytes": 0, "ctx_overhead_bytes": 0 },
+      { "terms": { "budget_bytes": 0, "weights_bytes": 0, "fixed_overhead_bytes": 0 },
         "usable_window": 0, "limited_by": "kv" }
     ]
   },
