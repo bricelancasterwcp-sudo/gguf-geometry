@@ -2,4 +2,8 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .venv/
+
+# SDD workspace (intentionally untracked): controller ruling recorded in
+# .superpowers/sdd/2026-08-27-gguf-geometry/progress.md, "Rulings
+# (pre-execution)" list, item 1 — SDD workspaces stay local in public repos.
 .superpowers/
