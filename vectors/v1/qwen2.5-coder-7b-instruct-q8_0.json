@@ -40,7 +40,7 @@
         },
         "usable_window": 32768,
         "limited_by": "training_ctx",
-        "note": "synthetic terms; kv fits 140434 tokens, training_ctx binds"
+        "note": "synthetic terms; arithmetic: (8589934592-536870912)//57344 = 140434 > 32768, so training_ctx binds"
       },
       {
         "terms": {
@@ -53,7 +53,7 @@
         },
         "usable_window": 8192,
         "limited_by": "user_cap",
-        "note": "synthetic terms; user_cap binds"
+        "note": "synthetic terms; arithmetic: (8589934592-536870912)//57344 = 140434, training_ctx 32768, user_cap 8192 = min, so user_cap binds"
       }
     ]
   },
