@@ -61,3 +61,60 @@ def test_absent_model_is_uncovered_not_failed(tmp_path):
 def test_missing_expected_key_in_result_fails(tmp_path):
     report = check.compare({"example-model": {"experts": None}}, vector_dir(tmp_path))
     assert any("kv_bytes_per_token" in diff for _, diff in report.failed)
+
+
+# Windows: consumed format is [{"usable_window", "limited_by"}], compared
+# positionally against the vector's expected.windows scenarios (which also
+# carry "terms" — the scenario inputs — that results never echo back).
+WINDOW_VECTOR = dict(
+    VECTOR,
+    expected={
+        "kv_bytes_per_token": 57344,
+        "experts": None,
+        "windows": [
+            {"terms": {"budget_bytes": 0}, "usable_window": 0, "limited_by": "kv"},
+            {"terms": {"budget_bytes": 100}, "usable_window": 4096, "limited_by": "budget"},
+        ],
+    },
+)
+
+
+def window_vector_dir(tmp_path):
+    (tmp_path / "example-model.json").write_text(json.dumps(WINDOW_VECTOR))
+    return tmp_path
+
+
+def test_matching_windows_pass_ignoring_terms(tmp_path):
+    report = check.compare(
+        {
+            "example-model": {
+                "kv_bytes_per_token": 57344,
+                "experts": None,
+                "windows": [
+                    {"usable_window": 0, "limited_by": "kv"},
+                    {"usable_window": 4096, "limited_by": "budget"},
+                ],
+            }
+        },
+        window_vector_dir(tmp_path),
+    )
+    assert report.passed == ["example-model"] and not report.failed
+
+
+def test_window_mismatch_at_position_fails(tmp_path):
+    report = check.compare(
+        {
+            "example-model": {
+                "kv_bytes_per_token": 57344,
+                "experts": None,
+                "windows": [
+                    {"usable_window": 0, "limited_by": "kv"},
+                    {"usable_window": 8192, "limited_by": "budget"},
+                ],
+            }
+        },
+        window_vector_dir(tmp_path),
+    )
+    assert any(
+        "windows" in diff and "8192" in diff and "4096" in diff for _, diff in report.failed
+    )
