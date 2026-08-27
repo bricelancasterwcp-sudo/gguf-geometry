@@ -88,6 +88,23 @@ a dev dependency for this repo's own tests only):
   vector directory, field by field, and fails on any `must_not_equal`
   hit. Computes no geometry; it only compares.
 
+## Running the checks
+
+Two commands check this repo, and CI is held to the same two:
+
+```bash
+python -m pytest tests/ -q                   # the pinning suite
+python tools/validate_vectors.py vectors/v1  # vector shape + manifest; exit 0 = clean
+```
+
+Nothing beyond the standard library and pytest is needed, so
+`python -m pip install pytest` on Python 3.12+ is the whole environment.
+`tests/test_ci_contract.py` pins that pairing: it asserts this section
+documents both commands, and — as soon as a workflow exists under
+`.github/workflows/` — that CI runs the same two against the same vector
+directory, on a Python it pins at 3.12 or newer. Documented check and
+enforced check cannot drift apart silently.
+
 ## Non-goals
 
 No binary GGUF reader (vectors take extracted metadata as input — every
