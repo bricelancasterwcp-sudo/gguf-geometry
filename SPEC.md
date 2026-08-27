@@ -34,10 +34,16 @@ value is absent (null/None) — NEVER 0. A dense model is not a 0-expert
 MoE.
 
 ## R6 — serving block count
-`serving_block_count = block_count - mtp_num_hidden_layers` when the
-MTP key is present and nonzero. MTP layers are not serving layers.
-(Origin: REAP-48 prune left `mtp_num_hidden_layers: 1` → 41-vs-40 →
-unloadable GGUF.)
+`serving_block_count = block_count - <arch>.nextn_predict_layers` when
+the MTP key is present and nonzero. MTP layers are not serving layers.
+`<arch>.nextn_predict_layers` is the GGUF spelling; HF `config.json`
+calls the same quantity `mtp_num_hidden_layers`, and that name never
+reaches the GGUF — the namespaced GGUF key is the one an implementation
+reads, and the one the conformance vector carries. (Origin: REAP-48
+prune left `mtp_num_hidden_layers: 1` in the HF config, so
+`convert_hf_to_gguf` sized `block_count = 40 + 1 = 41` and emitted
+`qwen35moe.nextn_predict_layers = 1` while writing 40 blocks of tensors
+→ 41-vs-40 → unloadable GGUF.)
 
 ## R7 — the window law
 A pure function. Named input terms: `training_ctx`, `budget_bytes`

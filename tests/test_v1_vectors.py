@@ -6,6 +6,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 import validate_vectors  # noqa: E402
 
 V1 = Path(__file__).resolve().parents[1] / "vectors" / "v1"
+SPEC = Path(__file__).resolve().parents[1] / "SPEC.md"
 WITHHELD_ERRATUM = (
     Path(__file__).resolve().parents[1]
     / "docs" / "upstream-errata"
@@ -85,6 +86,31 @@ def test_mtp_trap_pins_serving_block_count():
     assert v["metadata"]["qwen35moe.block_count"] == 41
     assert v["expected"]["serving_block_count"] == 40
     assert 41 in v["must_not_equal"]["serving_block_count"]
+
+
+def test_spec_r6_names_the_key_the_trap_vector_carries():
+    """R6 must name the GGUF spelling, or its own vector is unpassable.
+
+    `mtp_num_hidden_layers` is HF `config.json`'s name for the quantity;
+    what `convert_hf_to_gguf` writes — and therefore what an R6
+    implementation reads — is `<arch>.nextn_predict_layers` (bloomery
+    2026-08-22-reap48-ours-prune-and-acceptance.md §7 KV diff). An
+    implementation applying R6 literally to the HF spelling finds no MTP
+    key in qwen3.6-35b-a3b-reap48-mtp-trap, reports serving_block_count
+    41, and trips that vector's own must_not_equal — contract text and
+    conformance vector disagreeing on the input key. So the rule must
+    carry the GGUF spelling (and, to keep the mapping legible, the HF one
+    it mirrors), and the vector must carry that exact key.
+    """
+    spec = SPEC.read_text()
+    assert "## R6 — serving block count" in spec
+    r6 = spec.split("## R6 — serving block count")[1].split("## R7")[0]
+    assert "block_count - <arch>.nextn_predict_layers" in r6
+    assert "mtp_num_hidden_layers" in r6
+    trap = load("qwen3.6-35b-a3b-reap48-mtp-trap")
+    mtp_keys = [k for k in trap["metadata"] if k.endswith("nextn_predict_layers")]
+    assert mtp_keys == ["qwen35moe.nextn_predict_layers"]
+    assert trap["metadata"][mtp_keys[0]] == 1
 
 
 def test_every_affected_vector_carries_must_not_equal():

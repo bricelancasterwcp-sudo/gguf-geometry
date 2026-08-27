@@ -25,9 +25,11 @@ independently, and each has produced a measured defect:
 | bloomery | `crates/bloomery-core/{gguf,geometry}.rs` (Rust) | Hybrid KV derived from all 40 blocks instead of `full_attention_interval` (4× over-charge on Qwen3.6-35B-A3B — 40 blocks charged, 10 real attention layers); DeltaNet recurrent state (62.8 MiB/ctx) uncharged; both fixed in turn 5 |
 | robigo | `src/robigo/model/{gguf,geometry}.py` (Python) | Origin of the window law; frozen as a findings repo — not a consumer of this contract |
 
-A related parse-layer trap is on record: REAP-pruned GGUFs carrying
-`mtp_num_hidden_layers: 1` yield a 41-vs-40 block count and an unloadable
-model until the key is handled.
+A related parse-layer trap is on record: a REAP-pruned checkpoint whose HF
+`config.json` carries `mtp_num_hidden_layers: 1` converts to a GGUF carrying
+`<arch>.nextn_predict_layers: 1` and `block_count` 41 — a 41-vs-40 block
+count and an unloadable model until the key is handled (SPEC.md R6; the
+GGUF spelling is the one an implementation reads).
 
 ## The contract
 
