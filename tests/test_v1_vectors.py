@@ -18,9 +18,11 @@ EXPECTED_IDS = {
     "gemma2-9b", "mistral-nemo-latest",
     "deepseek-coder-v2-16b-lite-instruct-q5_K_M",
     "gemma-4-12b-it-qat-q4_0-latest",
+    "qwen3.6-35b-a3b-reap48-ours-q4km",
+    "qwen3.6-35b-a3b-reap48-mtp-trap",
 }
 
-# The ninth planned vector, `qwen3.8-27b`, is deliberately NOT in v1 — see
+# The ninth planned E1-sweep vector, `qwen3.8-27b`, is deliberately NOT in v1 — see
 # test_qwen38_27b_is_deliberately_absent for the reason and the evidence,
 # and WITHHELD_ERRATUM for the filed record. Ruled 2026-08-27: a documented
 # v1 scope reduction (design spec section 4, plan Task 4 item 7).
@@ -45,6 +47,44 @@ def test_anchor_values_pinned():
     assert load("qwen2.5-coder-14b-instruct-q4_K_M")["expected"]["kv_bytes_per_token"] == 196608
     assert load("deepseek-coder-v2-16b-lite-instruct-q5_K_M")["expected"]["experts"] == {"count": 64, "used": 6}
     assert load("gemma-4-12b-it-qat-q4_0-latest")["expected"] == {"refuses": True}
+
+
+def test_hybrid_anchor_values():
+    """The R3/R4 case: charge the 10 attention layers, not the 40 blocks.
+
+    Every number here is bloomery's, measured on this exact GGUF: kv 20,480
+    B/tok and recurrent_state_bytes 65,863,680 B were read from `/status` on
+    two identical boots (2026-08-22-g5v4-reap48-baselines.md §7), and the
+    2026-08-21 spike caught llama.cpp allocating `1070.00 MiB / 54,784 cells`
+    = exactly 20,480 B/token while the daemon charged 81,920 — a measured
+    4.00x over-charge. 81,920 is pinned as must_not_equal because it is the
+    number a conforming implementation must NOT produce.
+    """
+    v = load("qwen3.6-35b-a3b-reap48-ours-q4km")
+    assert v["expected"]["kv_bytes_per_token"] == 20480
+    assert v["expected"]["attention_layers"] == 10
+    assert v["expected"]["recurrent_state_bytes"] == 65863680
+    assert v["expected"]["serving_block_count"] == 40
+    assert 81920 in v["must_not_equal"]["kv_bytes_per_token"]
+    assert v["source"]["gguf_sha256"].startswith("90e2181e")
+
+
+def test_mtp_trap_pins_serving_block_count():
+    """R6: an MTP layer is not a serving layer.
+
+    The pre-patch REAP-48-ours conversion emitted block_count 41 alongside
+    `qwen35moe.nextn_predict_layers 1` while writing only 40 blocks of
+    tensors, and the GGUF would not load (`missing tensor
+    'blk.40.attn_norm.weight'`). The key name is the one the artifact
+    actually carried — the HF-config spelling `mtp_num_hidden_layers` never
+    reaches the GGUF — so the metadata key is pinned by name as well as by
+    value; renaming it in the vector would stop exercising R6.
+    """
+    v = load("qwen3.6-35b-a3b-reap48-mtp-trap")
+    assert v["metadata"]["qwen35moe.nextn_predict_layers"] == 1
+    assert v["metadata"]["qwen35moe.block_count"] == 41
+    assert v["expected"]["serving_block_count"] == 40
+    assert 41 in v["must_not_equal"]["serving_block_count"]
 
 
 def test_every_affected_vector_carries_must_not_equal():
