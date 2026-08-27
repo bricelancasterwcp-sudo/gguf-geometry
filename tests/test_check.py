@@ -1,0 +1,63 @@
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+import check  # noqa: E402
+
+VECTOR = {
+    "id": "example-model",
+    "source": {"gguf_sha256": "a" * 64, "provenance": "doc"},
+    "metadata": {"general.architecture": "qwen2"},
+    "expected": {"kv_bytes_per_token": 57344, "experts": None},
+    "must_not_equal": {"kv_bytes_per_token": [114688], "note": "old head_dim formula"},
+    "verification": "hardware-verified",
+}
+
+
+def vector_dir(tmp_path):
+    (tmp_path / "example-model.json").write_text(json.dumps(VECTOR))
+    return tmp_path
+
+
+def test_matching_result_passes(tmp_path):
+    report = check.compare(
+        {"example-model": {"kv_bytes_per_token": 57344, "experts": None}},
+        vector_dir(tmp_path),
+    )
+    assert report.passed == ["example-model"] and not report.failed
+
+
+def test_wrong_kv_fails_with_diff(tmp_path):
+    report = check.compare(
+        {"example-model": {"kv_bytes_per_token": 999, "experts": None}},
+        vector_dir(tmp_path),
+    )
+    (vid, diff), = report.failed
+    assert vid == "example-model" and "57344" in diff and "999" in diff
+
+
+def test_must_not_equal_hit_fails_naming_the_note(tmp_path):
+    report = check.compare(
+        {"example-model": {"kv_bytes_per_token": 114688, "experts": None}},
+        vector_dir(tmp_path),
+    )
+    assert any("old head_dim formula" in diff for _, diff in report.failed)
+
+
+def test_experts_zero_is_not_null(tmp_path):
+    report = check.compare(
+        {"example-model": {"kv_bytes_per_token": 57344, "experts": {"count": 0, "used": 0}}},
+        vector_dir(tmp_path),
+    )
+    assert report.failed
+
+
+def test_absent_model_is_uncovered_not_failed(tmp_path):
+    report = check.compare({}, vector_dir(tmp_path))
+    assert report.uncovered == ["example-model"] and not report.failed
+
+
+def test_missing_expected_key_in_result_fails(tmp_path):
+    report = check.compare({"example-model": {"experts": None}}, vector_dir(tmp_path))
+    assert any("kv_bytes_per_token" in diff for _, diff in report.failed)
