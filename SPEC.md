@@ -14,7 +14,10 @@ committed profiles, both signs.)
 ## R2 — KV bytes per token
 `2 * attention_layer_count * head_count_kv * head_dim * bytes_per_element`
 (2 = K and V; bytes_per_element = 2 for f16 cache). Expert-invariant by
-design: K/V heads are dense in MoE architectures.
+design: K/V heads are dense in MoE architectures. Specified for
+`key_length` alone — an architecture stating a different
+`attention.value_length` (MLA) is a known open gap, recorded under
+Versioning / v2 and not closed by this rule.
 
 ## R3 — attention_layer_count (hybrid models)
 For architectures with a `full_attention_interval` key (or equivalent):
@@ -65,10 +68,11 @@ version. Any semantic change to a rule bumps the set. Old sets are
 never edited; comparisons across sets are incomparable, not wrong.
 
 **v2 (2026-08-27).** The current set is `vectors/v2/`: eleven vectors —
-v1's ten carried forward byte-for-byte (same shas, so the two sets stay
-comparable where they overlap) plus `qwen3.8-27b`, the case v1 withheld.
-No rule text changed for v2; R1–R8 above are the rules both sets are
-checked against. (The heading's `(v1)` is left as first written: this
+nine of v1's ten carried forward byte-for-byte (identical shas, so the
+two sets stay comparable where they overlap), two with metadata-only
+additions that move no `expected` value (below), plus `qwen3.8-27b`, the
+case v1 withheld. No rule text changed for v2; R1–R8 above are the rules
+both sets are checked against. (The heading's `(v1)` is left as first written: this
 file is amended in place and dated — see R6, amended 2026-08-27 — rather
 than renumbered, and the version a consumer vendors is the directory,
 per the paragraph above.)
@@ -85,6 +89,20 @@ Two carried-forward vectors additionally state metadata keys their v1
 copies cited but omitted — gemma-4's sliding-window/`*_swa` family and
 deepseek-coder-v2's `attention.value_length` — and neither `expected`
 block moved: completing the stated inputs is not a re-derivation.
+
+**Known open gap — R2 and MLA (recorded 2026-08-27, not closed).** R2 is
+specified for `key_length` alone: R1's `head_dim` is the key width, and
+the factor 2 stands for K and V. That is the arithmetic behind every kv
+figure in both sets, including deepseek-coder-v2's published,
+hardware-verified `kv_bytes_per_token` 331776. What v2 makes visible is
+the case that reading does not cover: `vectors/v2/deepseek-coder-v2-16b-lite-instruct-q5_K_M.json`
+now states `attention.value_length` 128 against `attention.key_length`
+192 (MLA — two different head widths), so an implementation that models
+them separately derives a different number and fails that vector. No rule
+here settles which is right, and this repo derives nothing, so the gap is
+recorded rather than closed: closing it needs a rule and a measurement.
+Until both exist, R2 means what it says, and the vector pins the measured
+figure.
 
 `vectors/v1/` stays frozen and valid. Its withheld-case record remains
 true of v1 forever; v2 is where the closure lands.
