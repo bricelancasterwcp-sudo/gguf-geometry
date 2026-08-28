@@ -33,11 +33,12 @@ GGUF spelling is the one an implementation reads).
 
 ## The contract
 
-[SPEC.md](SPEC.md) states eight rules, R1–R8, covering head_dim
+[SPEC.md](SPEC.md) states nine rules, R1–R9, covering head_dim
 derivation, KV bytes per token, hybrid-model attention layer counting,
 recurrent state, MoE expert fields, MTP-aware block counting, the window
-law itself, and the refusal behavior for unknown architectures. Each rule
-cites the measured defect it closes.
+law itself, the refusal behavior for unknown architectures, and MLA's
+separate K/V widths (R9, added 2026-08-28). Each rule cites the measured
+defect it closes.
 
 **Versioning:** the vector-set directory (`vectors/v1/`, `v2/`, ...) is
 the contract version. Any semantic change to a rule bumps the set. Old
