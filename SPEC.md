@@ -63,3 +63,28 @@ is a contract violation, not a fallback.
 The vector-set directory (`vectors/v1/`, `v2/`, ...) is the contract
 version. Any semantic change to a rule bumps the set. Old sets are
 never edited; comparisons across sets are incomparable, not wrong.
+
+**v2 (2026-08-27).** The current set is `vectors/v2/`: eleven vectors —
+v1's ten carried forward byte-for-byte (same shas, so the two sets stay
+comparable where they overlap) plus `qwen3.8-27b`, the case v1 withheld.
+No rule text changed for v2; R1–R8 above are the rules both sets are
+checked against. (The heading's `(v1)` is left as first written: this
+file is amended in place and dated — see R6, amended 2026-08-27 — rather
+than renumbered, and the version a consumer vendors is the directory,
+per the paragraph above.)
+
+The withheld case entered on exactly what its erratum named as closing
+it: a live run charging R3/R4/R6 correctly, by the corrected instrument
+at assay master `24420f2`, captured in assay
+`docs/superpowers/evidence/qwen38-27b-live-2026-08-27/` and committed at
+assay `8892d0e`. Pinning its published 260 KiB/token figure in v1 would
+have frozen a 4.0625x attention over-charge *as the contract*, so it
+waited for a later set rather than entering v1 as an unverified number
+(`docs/upstream-errata/2026-08-27-assay-qwen3.8-27b-hybrid-overcharge.md`).
+Two carried-forward vectors additionally state metadata keys their v1
+copies cited but omitted — gemma-4's sliding-window/`*_swa` family and
+deepseek-coder-v2's `attention.value_length` — and neither `expected`
+block moved: completing the stated inputs is not a re-derivation.
+
+`vectors/v1/` stays frozen and valid. Its withheld-case record remains
+true of v1 forever; v2 is where the closure lands.

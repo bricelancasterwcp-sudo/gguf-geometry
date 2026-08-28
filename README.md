@@ -10,9 +10,9 @@ implementations at once.
 evidence, nothing else. A reference implementation living here would just
 be a third implementation with a fourth bug — one more place the same
 mistake could hide. Instead, this repo pins one written contract
-([SPEC.md](SPEC.md)) and one frozen set of conformance vectors
-(`vectors/v1/`); each consumer proves its own implementation against them
-in its own CI.
+([SPEC.md](SPEC.md)) and frozen sets of conformance vectors (`vectors/v2/`
+is current, `vectors/v1/` frozen); each consumer proves its own
+implementation against them in its own CI.
 
 ## The problem this fixes
 
@@ -46,10 +46,15 @@ wrong.
 
 ## Conformance vectors
 
-`vectors/v1/<model-id>.json` — one file per model, each stating the
+`vectors/<set>/<model-id>.json` — one file per model, each stating the
 metadata GGUF keys and the expected geometry values a conforming
 implementation must derive from them, plus (where applicable)
 `must_not_equal`: historical wrong answers pinned as adversarial cases.
+
+**Current set: `vectors/v2/`** (2026-08-27) — eleven vectors: v1's ten
+carried forward byte-for-byte, plus `qwen3.8-27b`, the case v1 withheld,
+which entered on the live conforming run that closed its erratum.
+`vectors/v1/` (ten vectors) stays frozen and is never edited.
 
 **Expected values enter only by citation from published evidence.** Every
 vector's `expected` block names the evidence document it comes from in
@@ -64,11 +69,15 @@ than pinned at the contradicting value — pinning it would freeze the
 defect as the contract. Withheld cases are filed in
 [`docs/upstream-errata/`](docs/upstream-errata/) with the evidence, the
 rule they conflict with, and what would close them; the test suite pins
-both the absence and its record.
+both the absence and its record. When a case closes, it lands in the next
+set rather than being back-fitted into the frozen one: `qwen3.8-27b` was
+withheld from v1 and enters v2 on the live conforming measurement its
+erratum named as the thing that would close it.
 
 ## Consumer model
 
-1. Vendor a sha-pinned copy of `vectors/v1/` into your own repo.
+1. Vendor a sha-pinned copy of one set — `vectors/v2/` for new work — into
+   your own repo.
 2. Assert the vendored `MANIFEST.json` sha in your test suite, so a
    silent re-vendor is a visible diff.
 3. Run your own implementation over the vectors in your own CI — this
@@ -90,19 +99,24 @@ a dev dependency for this repo's own tests only):
 
 ## Running the checks
 
-Two commands check this repo, and CI is held to the same two:
+These commands check this repo, and CI is held to the same ones — one
+validation per set, because a frozen set is only frozen while something
+still checks it:
 
 ```bash
 python -m pytest tests/ -q                   # the pinning suite
 python tools/validate_vectors.py vectors/v1  # vector shape + manifest; exit 0 = clean
+python tools/validate_vectors.py vectors/v2  # the current set, same check
 ```
 
 Nothing beyond the standard library and pytest is needed, so
 `python -m pip install pytest` on Python 3.12+ is the whole environment.
 `tests/test_ci_contract.py` pins that pairing: it asserts this section
-documents both commands, and — as soon as a workflow exists under
-`.github/workflows/` — that CI runs the same two against the same vector
-directory, on a Python it pins at 3.12 or newer. Documented check and
+documents the suite and the vector validation, and — as soon as a workflow
+exists under `.github/workflows/` — that CI runs the same commands against
+the same vector directory, on a Python it pins at 3.12 or newer.
+`tests/test_v2_vectors.py` extends the same pin to the current set, so a
+new set cannot be published with nothing checking it. Documented check and
 enforced check cannot drift apart silently.
 
 ## Non-goals
