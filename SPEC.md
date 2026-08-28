@@ -68,7 +68,7 @@ version. Any semantic change to a rule bumps the set. Old sets are
 never edited; comparisons across sets are incomparable, not wrong.
 
 **v2 (2026-08-27).** The current set is `vectors/v2/`: eleven vectors —
-nine of v1's ten carried forward byte-for-byte (identical shas, so the
+eight of v1's ten carried forward byte-for-byte (identical shas, so the
 two sets stay comparable where they overlap), two with metadata-only
 additions that move no `expected` value (below), plus `qwen3.8-27b`, the
 case v1 withheld. No rule text changed for v2; R1–R8 above are the rules

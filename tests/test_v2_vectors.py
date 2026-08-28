@@ -84,9 +84,11 @@ def test_manifest_declares_the_set_version_and_covers_every_file():
 def test_carried_forward_vectors_are_v1_bytes():
     """v2 carries v1 forward; it does not re-author it.
 
-    Nine of v1's ten files must hash to exactly their v1 manifest entry —
+    Eight of v1's ten files must hash to exactly their v1 manifest entry —
     same bytes, same shas, comparable across sets. The two upgraded files
-    are excluded here and pinned by the two upgrade tests below.
+    are excluded here and pinned by the two upgrade tests below. (The loop
+    counts by name, not by number, so the count in this sentence is prose:
+    ten shared files minus the two in UPGRADED.)
     """
     v1_files, v2_files = manifest(V1)["files"], manifest(V2)["files"]
     for name, sha in v1_files.items():

@@ -51,13 +51,13 @@ metadata GGUF keys and the expected geometry values a conforming
 implementation must derive from them, plus (where applicable)
 `must_not_equal`: historical wrong answers pinned as adversarial cases.
 
-**Current set: `vectors/v2/`** (2026-08-27) — eleven vectors: nine of v1's
+**Current set: `vectors/v2/`** (2026-08-27) — eleven vectors: eight of v1's
 ten carried forward byte-for-byte, two with metadata-only additions that
 move no `expected` value (gemma-4's sliding-window/`*_swa` family,
 deepseek-coder-v2's `attention.value_length`), and `qwen3.8-27b`, the case
 v1 withheld, which entered on the live conforming run that closed its
 erratum. Those two files therefore carry different shas from their v1
-copies — the other nine hash identically across both sets.
+copies — the other eight hash identically across both sets.
 `vectors/v1/` (ten vectors) stays frozen and is never edited.
 
 **Expected values enter only by citation from published evidence.** Every
