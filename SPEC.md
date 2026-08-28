@@ -1,6 +1,8 @@
 # The GGUF Geometry Contract (v1)
 
-Rules R1–R8. A conforming implementation derives these values from GGUF
+Rules R1–R9 (R9 added 2026-08-28; v1/v2 were checked against R1–R8
+only — see Versioning). A conforming implementation derives these
+values from GGUF
 metadata KV pairs (the namespaced keys, e.g. `qwen2.block_count`,
 `<arch>.attention.head_count_kv`) and nothing else.
 
@@ -18,6 +20,8 @@ design: K/V heads are dense in MoE architectures. Specified for
 `key_length` alone — an architecture stating a different
 `attention.value_length` (MLA) is a known open gap, recorded under
 Versioning / v2 and not closed by this rule.
+(Amended 2026-08-28: R9 now covers that case; R2 defers to R9 when
+value_length is stated and differs.)
 
 ## R3 — attention_layer_count (hybrid models)
 For architectures with a `full_attention_interval` key (or equivalent):
@@ -62,6 +66,22 @@ If the keys a rule needs are absent or the architecture is unrecognized,
 the implementation refuses (returns unknown/None and says why). Guessing
 is a contract violation, not a fallback.
 
+## R9 — MLA, separate widths
+When `<arch>.attention.value_length` is present and differs from
+`attention.key_length`: `kv_bytes_per_token = attention_layer_count *
+head_count_kv * (key_length + value_length) * bytes_per_element`. R2
+defers to this rule when value_length is stated and differs from
+key_length. (Origin: measured on deepseek2 under ollama 0.32.13 — llama
+runner, non-FA (flash attention resolved to CPU on all three loads) —
+this box, 2026-08-27 capture, assay `mla-kv-2026-08-27`; one
+architecture, one runtime, dated. The blob states
+`attention.kv_lora_rank 512` — it is MLA — yet the measured runtime
+caches full per-head K and V rather than the 512+64 latent; this rule
+keys on the stated `value_length != key_length`, never on "the
+architecture is MLA" — a latent-cache assumption would have been wrong
+here by ~8.9x. See
+`docs/upstream-errata/2026-08-27-assay-deepseek-mla-kv-overcharge.md`.)
+
 ## Versioning
 The vector-set directory (`vectors/v1/`, `v2/`, ...) is the contract
 version. Any semantic change to a rule bumps the set. Old sets are
@@ -103,6 +123,32 @@ here settles which is right, and this repo derives nothing, so the gap is
 recorded rather than closed: closing it needs a rule and a measurement.
 Until both exist, R2 means what it says, and the vector pins the measured
 figure.
+
+**Closed 2026-08-28 by measurement** — assay
+`docs/superpowers/evidence/mla-kv-2026-08-27/` (ollama 0.32.13, this
+box): verdict **H-b**, separate K and V widths,
+`27 * 16 * (192 + 128) * 2` = **276,480 bytes/token**, exact and
+identical at all three measured ctx points (2048/4096/8192 — 540/1080/2160
+MiB over the log-reported cell counts, zero remainder), with the log's
+own K/V split independently reproducing both halves digit for digit
+(K 165,888 = `27*16*192*2`, V 110,592 = `27*16*128*2`). The previously
+published 331,776 B/token (324 KiB/token, "hardware-verified" in
+`vectors/v1/` and `vectors/v2/`) is disproved: it was R2 arithmetic
+executed on a live box (`geometry.source: api_show`), never an observed
+allocation. Direction: over-charge — usable windows were
+under-promised, not over-promised. Lens: read under the non-FA path
+(flash attention resolved to CPU on all three loads) on this one box;
+the blob is itself MLA (`attention.kv_lora_rank 512` stated) yet this
+runtime materializes full per-head K and V rather than caching the
+latent, which is why R9 keys on the stated `value_length != key_length`
+rather than on "the architecture is MLA." See R9 and `vectors/v3`.
+
+**v3 (2026-08-28).** `vectors/v3/`: eleven vectors — ten carried
+byte-for-byte from v2, `deepseek-coder-v2-16b-lite-instruct-q5_K_M`
+re-pinned to the measured rule (R9, 276,480 B/token), disproved
+candidates (331,776 — the R2-arithmetic figure above; 31,104 and 62,208
+— the latent-cache candidates ruled out by the same measurement) pinned
+as `must_not_equal`. v1/v2 stay frozen.
 
 `vectors/v1/` stays frozen and valid. Its withheld-case record remains
 true of v1 forever; v2 is where the closure lands.
