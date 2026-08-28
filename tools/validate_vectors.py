@@ -114,12 +114,31 @@ def _check_expected(prefix: str, expected: dict) -> list[str]:
     return violations
 
 
-def _check_must_not_equal(prefix: str, must_not_equal) -> list[str]:
+def _check_must_not_equal(prefix: str, must_not_equal, expected) -> list[str]:
+    """Shape of the adversarial block, plus the guard that keeps it non-vacuous.
+
+    A consumer's emitted result mirrors the shape of `expected` (design spec
+    section 5), and `tools/check.py` skips any banned field a result does not
+    carry. So a `must_not_equal` key that `expected` never names can never be
+    hit — the ban is inert, and silently so. Requiring the ban to speak the
+    vector's own vocabulary turns a typo'd field name into a validation
+    failure instead of a case that passes by not being checked.
+    """
     if not isinstance(must_not_equal, dict):
         return [f"{prefix}: must_not_equal must be an object"]
+    violations = []
     if not _is_nonempty_str(must_not_equal.get("note")):
-        return [f"{prefix}: must_not_equal.note must be a nonempty string"]
-    return []
+        violations.append(f"{prefix}: must_not_equal.note must be a nonempty string")
+    if isinstance(expected, dict):
+        for field in must_not_equal:
+            if field == "note":
+                continue
+            if field not in expected:
+                violations.append(
+                    f"{prefix}: must_not_equal.{field} names no field in expected "
+                    f"(a banned value for a field the vector does not state is never compared)"
+                )
+    return violations
 
 
 def _validate_vector(prefix: str, data: dict) -> list[str]:
@@ -152,7 +171,7 @@ def _validate_vector(prefix: str, data: dict) -> list[str]:
         violations.extend(_check_expected(prefix, expected))
 
     if "must_not_equal" in data:
-        violations.extend(_check_must_not_equal(prefix, data["must_not_equal"]))
+        violations.extend(_check_must_not_equal(prefix, data["must_not_equal"], expected))
 
     return violations
 
