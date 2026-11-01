@@ -56,7 +56,7 @@ Expected: the four bands printed match the table above; closest pair gap 1.2 (20
 - [ ] **Step 2: Write `PROTOCOL.md`** with exactly these sections (prose may be tightened, commitments may not):
 
 ```markdown
-# Pre-registered protocol: deepseek2 KV bytes/token under ollama 0.32.13
+# Pre-registered protocol — deepseek2 KV bytes/token under ollama 0.32.13
 
 Written and committed BEFORE any capture. Subject: what this runtime
 actually allocates per KV-cache token for
@@ -80,7 +80,7 @@ infrastructure, recorded as such, never data.
 
 ## Instrument 1 (primary): server-log KV buffer lines
 Load with explicit options.num_ctx; slice journalctl for the load;
-quote VERBATIM every KV-cache buffer/size line (all backends; if the
+quote VERBATIM every KV-cache buffer/size line (all backends — if the
 cache splits across CUDA0/CPU, the reading is the SUM of the lines).
 bytes/token = summed KV bytes ÷ the n_ctx THE LOG REPORTS (not the
 requested one; parallel slots inflate effective n_ctx). Every "because"
@@ -96,7 +96,7 @@ of magnitude, slope ≥ instrument 1's figure).
 
 ## Contingency
 If ollama 0.32.13's logs surface no usable KV-buffer lines, fallback is
-the same blob under a standalone llama-server, a DIFFERENT NAMED LENS;
+the same blob under a standalone llama-server — a DIFFERENT NAMED LENS;
 whether a rule may be written from it is Brice's ruling, not a swap.
 
 ## Ambient record (filled at capture, committed with the evidence)
@@ -130,7 +130,7 @@ M=$(ls /mnt/extra/ollama-models/manifests/registry.ollama.ai/library/deepseek-co
 import json,sys; m=json.load(open('$M'))
 layer=[l for l in m['layers'] if l['mediaType'].endswith('model')][0]
 d=layer['digest']; print('model layer digest:', d)
-assert d=='sha256:bc286970a24072cf23a4c905f28adb9f6a28c71743b07790185275a86dc72406', 'DIGEST MISMATCH: STOP'
+assert d=='sha256:bc286970a24072cf23a4c905f28adb9f6a28c71743b07790185275a86dc72406', 'DIGEST MISMATCH — STOP'
 print('digest OK')"
   ollama --version; ollama ps; nvidia-smi --query-gpu=memory.used,memory.free --format=csv; } | tee $EV/preflight.txt
 ```
@@ -166,7 +166,7 @@ Expected: three raw-log files each containing the runner's load lines. Do NOT re
 
 ```bash
 cd ~/workspace/assay && EV=docs/superpowers/evidence/mla-kv-2026-08-27
-git add $EV && git commit -m "docs: raw capture of the deepseek2 kv measurement, 3 ctx points (protocol-first)"
+git add $EV && git commit -m "docs: raw capture — deepseek2 kv measurement, 3 ctx points (protocol-first)"
 ```
 
 ### Task 3: Reading + verdict, then STOP for ruling
@@ -203,11 +203,11 @@ Report the verdict to Brice with the quoted lines. **Do not begin Phase 2 withou
 - Consumes: `VERDICT.md` (Task 3).
 - Produces: rule text that Task 5's vector provenance cites and Tasks 6–10 implement. Rule name: `R9` (H-b/c/c′ branches) or amended `R2` (H-a).
 
-- [ ] **Step 1: Amend SPEC.md per branch.** All branches: append to the "Known open gap" paragraph (never rewrite it): `**Closed YYYY-MM-DD by measurement.** assay docs/superpowers/evidence/mla-kv-2026-08-27/ (ollama 0.32.13, this box): <verdict + figure>. See <R2 amendment | R9> and vectors/v3.` Branch texts:
-  - **H-a**: amend R2 in place, dated: `(Amended 2026-08-27: measured, ollama 0.32.13 allocates the key width for both K and V on deepseek2; a stated attention.value_length ≠ key_length does not change the cache size under the measured runtime. Origin: assay mla-kv-2026-08-27.)`
-  - **H-b**: add R9: `## R9: MLA, separate widths\nWhen <arch>.attention.value_length is present and differs from attention.key_length: kv_bytes_per_token = attention_layer_count * head_count_kv * (key_length + value_length) * bytes_per_element. R2 defers to this rule in that case. (Origin: measured on deepseek2 under ollama 0.32.13, assay mla-kv-2026-08-27; one architecture, one runtime, dated.)`
-  - **H-c / H-c′**: add R9: `## R9: MLA, latent cache\nWhen <arch>.attention.value_length is present and differs from attention.key_length: kv_bytes_per_token = [2 * (H-c′ only)]attention_layer_count * (attention.kv_lora_rank + rope.dimension_count) * bytes_per_element, per layer, no head factor. If kv_lora_rank or rope.dimension_count is absent in that case, refuse (R8). (Origin: measured on deepseek2 under ollama 0.32.13, assay mla-kv-2026-08-27.)`
-  - **All decisive branches**: Versioning gains: `**v3 (YYYY-MM-DD).** vectors/v3/: eleven vectors, ten carried byte-for-byte from v2, deepseek-coder-v2 re-pinned to the measured rule (<R9|R2-confirmed>), disproved candidates pinned as must_not_equal. v1/v2 stay frozen.`
+- [ ] **Step 1: Amend SPEC.md per branch.** All branches: append to the "Known open gap" paragraph (never rewrite it): `**Closed YYYY-MM-DD by measurement** — assay docs/superpowers/evidence/mla-kv-2026-08-27/ (ollama 0.32.13, this box): <verdict + figure>. See <R2 amendment | R9> and vectors/v3.` Branch texts:
+  - **H-a**: amend R2 in place, dated: `(Amended 2026-08-27: measured — ollama 0.32.13 allocates the key width for both K and V on deepseek2; a stated attention.value_length ≠ key_length does not change the cache size under the measured runtime. Origin: assay mla-kv-2026-08-27.)`
+  - **H-b**: add R9: `## R9 — MLA, separate widths\nWhen <arch>.attention.value_length is present and differs from attention.key_length: kv_bytes_per_token = attention_layer_count * head_count_kv * (key_length + value_length) * bytes_per_element. R2 defers to this rule in that case. (Origin: measured on deepseek2 under ollama 0.32.13, assay mla-kv-2026-08-27; one architecture, one runtime, dated.)`
+  - **H-c / H-c′**: add R9: `## R9 — MLA, latent cache\nWhen <arch>.attention.value_length is present and differs from attention.key_length: kv_bytes_per_token = [2 * — H-c′ only]attention_layer_count * (attention.kv_lora_rank + rope.dimension_count) * bytes_per_element — per layer, no head factor. If kv_lora_rank or rope.dimension_count is absent in that case, refuse (R8). (Origin: measured on deepseek2 under ollama 0.32.13, assay mla-kv-2026-08-27.)`
+  - **All decisive branches**: Versioning gains: `**v3 (YYYY-MM-DD).** vectors/v3/: eleven vectors — ten carried byte-for-byte from v2, deepseek-coder-v2 re-pinned to the measured rule (<R9|R2-confirmed>), disproved candidates pinned as must_not_equal. v1/v2 stay frozen.`
   - **no-match**: ONLY the open-gap paragraph gains the measured figure + lens; no rule, no v3; skip Tasks 5–10 and report.
 - [ ] **Step 2 (verdict ≠ H-a only): write the erratum doc.** E3-style, mirroring `docs/upstream-errata/2026-08-27-assay-qwen3.8-27b-hybrid-overcharge.md` in structure: what was published (deepseek kv 324 KiB/token, "hardware-verified"), what it actually was (R2 arithmetic executed on a live box (`geometry.source: api_show`), never an observed allocation), the measured figure + lens, direction (over-charge → windows under-promised), affected artifacts (assay tier profiles, gguf-geometry v1/v2 deepseek vector `expected`. Frozen sets stay frozen; the erratum is the record), and the fix chain (R9/v3, assay E3, both consumers).
 - [ ] **Step 3: Run the repo suite** (SPEC-referencing tests may pin wording):
@@ -216,7 +216,7 @@ Report the verdict to Brice with the quoted lines. **Do not begin Phase 2 withou
 cd ~/workspace/gguf-geometry && PYTHONDONTWRITEBYTECODE=1 uv run --offline --with pytest --python 3.12 python -m pytest -q > /tmp/claude-gg-task4.txt 2>&1; echo exit=$?
 ```
 Expected: exit=0 (v1/v2 tests untouched by SPEC prose; if a test pins the open-gap wording, amend the TEST's expectation only where the spec says the text gained an appended closure. Never weaken a frozen-set pin).
-- [ ] **Step 4: Commit** `docs: close R2/MLA gap per measurement, <branch> (+ E3 erratum)`.
+- [ ] **Step 4: Commit** `docs: close R2/MLA gap per measurement — <branch> (+ E3 erratum)`.
 
 ### Task 5: vectors/v3 + test_v3_vectors.py + MANIFEST (TDD), then STOP for ruling
 
@@ -243,11 +243,11 @@ Expected: exit=0 (v1/v2 tests untouched by SPEC prose; if a test pins the open-g
 PYTHONDONTWRITEBYTECODE=1 uv run --offline --with pytest --python 3.12 python -m pytest -q tests/test_v3_vectors.py > /tmp/claude-gg-task5-red.txt 2>&1; echo exit=$?
 ```
 Expected: nonzero exit, `vectors/v3` missing.
-- [ ] **Step 3: Build the set**: `mkdir vectors/v3 && cp -a vectors/v2/*.json vectors/v3/ && rm vectors/v3/MANIFEST.json` (carry all, then edit the one). Edit the deepseek vector: apply the branch row from the table (must_not_equal each gains a note clause naming what it was: `"E1: embedding//head_count head_dim"` stays; append to note: `"; MLA candidates disproved by measurement (assay mla-kv-2026-08-27): <list>. See SPEC <R9|R2 amendment>."`). Append to `source.provenance` (never rewrite): `v3 (YYYY-MM-DD): expected re-pinned per <R9|confirmed R2>, measured <figure> B/token under ollama 0.32.13 (assay docs/superpowers/evidence/mla-kv-2026-08-27/, instrument 1 log lines); disproved candidates pinned. [H-c/H-c′ only:] kv_lora_rank 512 and rope.dimension_count 64 stated verbatim from the same show capture the vector already cites.` `verification` stays `"hardware-verified"`, and for the first time the kv figure is an OBSERVED allocation, which the provenance sentence says.
+- [ ] **Step 3: Build the set**: `mkdir vectors/v3 && cp -a vectors/v2/*.json vectors/v3/ && rm vectors/v3/MANIFEST.json` (carry all, then edit the one). Edit the deepseek vector: apply the branch row from the table (must_not_equal each gains a note clause naming what it was: `"E1: embedding//head_count head_dim"` stays; append to note: `"; MLA candidates disproved by measurement (assay mla-kv-2026-08-27): <list> — see SPEC <R9|R2 amendment>"`). Append to `source.provenance` (never rewrite): `v3 (YYYY-MM-DD): expected re-pinned per <R9|confirmed R2> — measured <figure> B/token under ollama 0.32.13 (assay docs/superpowers/evidence/mla-kv-2026-08-27/, instrument 1 log lines); disproved candidates pinned. [H-c/H-c′ only:] kv_lora_rank 512 and rope.dimension_count 64 stated verbatim from the same show capture the vector already cites.` `verification` stays `"hardware-verified"`, and for the first time the kv figure is an OBSERVED allocation, which the provenance sentence says.
 - [ ] **Step 4: Regenerate manifest**: `uv run --offline --python 3.12 python tools/gen_manifest.py vectors/v3` (check `tools/gen_manifest.py --help`/source first, and invoke exactly as the v2 arc did; the v2 MANIFEST.json is the shape reference).
 - [ ] **Step 5: Full suite green** (same runner command as Task 4, output to `/tmp/claude-gg-task5-green.txt`; both validators exit 0: `uv run --offline --python 3.12 python tools/validate_vectors.py vectors/v3` and the v2 invocation the CI workflow runs).
 - [ ] **Step 6: Mutation-check the new pins** (each: mutate → suite FAILS → revert + `touch`): (1) flip the deepseek expected to a disproved candidate → carried/expected pin must fail; (2) delete one disproved candidate from must_not_equal → the new pin must fail; (3) alter one byte of a carried-forward vector → byte-identity pin must fail. Record which assert fired, quoted.
-- [ ] **Step 7: Commit** `feat: v3 vector set, MLA rule pinned by measurement (<branch>)`. **STOP.** Present the Task 4+5 diff to Brice for the gguf-geometry merge/push ruling (CI must be green on push before Phase 3 vendors anything).
+- [ ] **Step 7: Commit** `feat: v3 vector set — MLA rule pinned by measurement (<branch>)`. **STOP.** Present the Task 4+5 diff to Brice for the gguf-geometry merge/push ruling (CI must be green on push before Phase 3 vendors anything).
 
 ---
 
@@ -307,7 +307,7 @@ def test_kv_mla_latent():                    # H-c branch (H-c': expected 62208)
                      value_length=128, kv_lora_rank=512, rope_dimension_count=64)
     assert kv_bytes_per_token(info) == 31104
 
-def test_kv_mla_latent_refuses_without_rank():   # H-c/c' only, R8
+def test_kv_mla_latent_refuses_without_rank():   # H-c/c' only — R8
     info = make_info(block_count=27, kv_head_count=16, head_dim=192, value_length=128)
     assert kv_bytes_per_token(info) is None
 
@@ -355,7 +355,7 @@ Update the function docstring: name R9, the measurement (`assay mla-kv-2026-08-2
 - [ ] **Step 1: Vendor byte-exact**: `cp -a` the 11 vector files + `MANIFEST.json` from gguf-geometry `vectors/v3/` into `tests/data/gguf_geometry_v3/`; `git rm -r tests/data/gguf_geometry_v2`. Verify three ways (the v2 pattern): `cmp` file-by-file against the source checkout; `sha256sum` against `MANIFEST.json`; and the conformance test's own pinned-sha assert (updated next step).
 - [ ] **Step 2: Update `tests/test_geometry_conformance.py`:** path constant to `gguf_geometry_v3`, vendored-from sha to the pushed gguf-geometry commit, docstring: v3 story (one set vendored; v2 deleted same commit; deepseek re-pinned by the measured rule; cite verdict + evidence dir). The deepseek vector now conforms through `OllamaNative.model_info()` → `geometry.py` with NO test-side mapping (the H-c/c′ metadata additions flow through the same seam). Suite must pass with the production code from Tasks 6–7. Under H-b/c/c′ the OLD code fails the new deepseek pin (run once with Tasks 6–7 stashed if cheap, to see the vector actually bites; record the red).
 - [ ] **Step 3: Re-aim the mutation harness:** `scripts/mutate_geometry_conformance.py` and `test_the_mutation_harness_still_aims_at_real_lines` (tests/test_geometry_conformance.py:293): add the R9 branch line(s) as aimed lines; run the harness; all mutants killed, output to file.
-- [ ] **Step 4 (skip under H-a): ERRATA.md E3.** Heading `## E3: deepseek2 MLA: kv was R2 arithmetic, not an observed allocation`, mirroring E1/E2 structure: the published figure (324 KiB/token, `source: api_show`), the measured truth (figure + lens + evidence dir), direction (over-charge → `usable_window` under-promised), affected profile files listed, corrected-value table row.
+- [ ] **Step 4 (skip under H-a): ERRATA.md E3.** Heading `## E3 — deepseek2 MLA: kv was R2 arithmetic, not an observed allocation`, mirroring E1/E2 structure: the published figure (324 KiB/token, `source: api_show`), the measured truth (figure + lens + evidence dir), direction (over-charge → `usable_window` under-promised), affected profile files listed, corrected-value table row.
 - [ ] **Step 5 (skip under H-a): SEMANTIC_BREAKS row.** First `git tag --list` / CHANGELOG check: if working `__version__` 0.13.0 is UNRELEASED, the row is `"geometry.kv_kib_per_token": (0, 13, 0)` with a comment citing R9 + E3 (this retires the standing v2-era debt item); if 0.13.0 already shipped, bump `__version__` to 0.14.0 and key the row there. Add a diff-side test in the file that covers `SEMANTIC_BREAKS` today: a profile pair straddling the row's version on that cell reads `incomparable`.
 - [ ] **Step 6: CARRIED-DEBT.md.** Strike through (never delete) the retired items: "SEMANTIC_BREAKS row for geometry.kv_kib_per_token" and, if Brice so rules, items 3/4; append this slice's settled/deferred/lessons block.
 - [ ] **Step 7: Full suite green** (runner + output-to-file + exit), then **STOP** for the assay merge/push ruling.

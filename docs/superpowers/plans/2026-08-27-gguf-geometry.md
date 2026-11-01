@@ -45,51 +45,51 @@ Rules R1–R8. A conforming implementation derives these values from GGUF
 metadata KV pairs (the namespaced keys, e.g. `qwen2.block_count`,
 `<arch>.attention.head_count_kv`) and nothing else.
 
-## R1: head_dim
+## R1 — head_dim
 `<arch>.attention.key_length` is authoritative when present.
 Fallback `embedding_length // head_count` is admissible ONLY when
-key_length is absent. (Origin: assay E1 erratum. The fallback used
+key_length is absent. (Origin: assay E1 erratum — the fallback used
 unconditionally over-promised usable windows 17–33% on 6 of 23
 committed profiles, both signs.)
 
-## R2: KV bytes per token
+## R2 — KV bytes per token
 `2 * attention_layer_count * head_count_kv * head_dim * bytes_per_element`
 (2 = K and V; bytes_per_element = 2 for f16 cache). Expert-invariant by
 design: K/V heads are dense in MoE architectures.
 
-## R3: attention_layer_count (hybrid models)
+## R3 — attention_layer_count (hybrid models)
 For architectures with a `full_attention_interval` key (or equivalent):
 `attention_layer_count = serving_block_count / full_attention_interval`.
-Never the raw block count. (Origin: bloomery turn-5. All-40-blocks
+Never the raw block count. (Origin: bloomery turn-5 — all-40-blocks
 charged a 4× KV overcharge on Qwen3.6-35B-A3B; 10 real attention
 layers.) Dense models: attention_layer_count = serving_block_count.
 
-## R4: recurrent state
+## R4 — recurrent state
 Architectures with `ssm.*` keys charge a distinct per-context term,
 `recurrent_state_bytes`, derived from the ssm dimensions. Zero ONLY
-when the architecture has no recurrent layers, never as a default.
+when the architecture has no recurrent layers — never as a default.
 
-## R5: MoE expert fields
+## R5 — MoE expert fields
 `expert_count` / `expert_used_count` absent from metadata means the
-value is absent (null/None). NEVER 0. A dense model is not a 0-expert
+value is absent (null/None) — NEVER 0. A dense model is not a 0-expert
 MoE.
 
-## R6: serving block count
+## R6 — serving block count
 `serving_block_count = block_count - mtp_num_hidden_layers` when the
 MTP key is present and nonzero. MTP layers are not serving layers.
 (Origin: REAP-48 prune left `mtp_num_hidden_layers: 1` → 41-vs-40 →
 unloadable GGUF.)
 
-## R7: the window law
+## R7 — the window law
 A pure function. Named input terms: `training_ctx`, `budget_bytes`
 (free accelerator bytes), `weights_bytes` (0 if already resident),
 `fixed_overhead_bytes`, `kv_bytes_per_token`, `recurrent_state_bytes`,
 `user_cap`. Output: `usable_window` and `limited_by` (the name of the
 binding term). `usable_window = min` over the measurable candidate
-terms; an unmeasured term DROPS OUT. It is never guessed. Consumers
+terms; an unmeasured term DROPS OUT — it is never guessed. Consumers
 map their own configuration onto these names.
 
-## R8: unknown architecture
+## R8 — unknown architecture
 If the keys a rule needs are absent or the architecture is unrecognized,
 the implementation refuses (returns unknown/None and says why). Guessing
 is a contract violation, not a fallback.
@@ -487,7 +487,7 @@ def test_windows_only_on_the_designated_vector():
 
 - [ ] **Step 5: Cross-check with the checker:** build a tiny results file by hand from two vectors' expected values, run `python3 tools/check.py /tmp/spot.json vectors/v1`, confirm 2 PASS + 6 UNCOVERED (7 as planned, minus the withheld item 7), exit 0. Then corrupt one value, confirm FAIL + exit 1. (This is the checker's first run against real vectors: an end-to-end smoke, not a substitute for Task 3's tests.)
 
-- [ ] **Step 6: Commit:** `git add vectors/ tests/test_v1_vectors.py && git commit -m "feat: v1 vectors, E1 attention corpus (8 models, provenance-cited)"`
+- [ ] **Step 6: Commit:** `git add vectors/ tests/test_v1_vectors.py && git commit -m "feat: v1 vectors — E1 attention corpus (8 models, provenance-cited)"`
 
 ---
 
@@ -527,7 +527,7 @@ Run; both fail (files absent).
 - [ ] **Step 2: Extract the hybrid metadata**
 
 ```bash
-sha256sum ~/models/gguf/qwen36-reap48-ours-Q4_K_M.gguf   # must start 90e2181e. STOP if not
+sha256sum ~/models/gguf/qwen36-reap48-ours-Q4_K_M.gguf   # must start 90e2181e — STOP if not
 python3 ~/llama.cpp/gguf-py/gguf/scripts/gguf_dump.py --no-tensors \
   ~/models/gguf/qwen36-reap48-ours-Q4_K_M.gguf > /tmp/claude-1000/-home-brice/*/scratchpad/reap48-dump.txt 2>/dev/null || \
 python3 ~/llama.cpp/gguf-py/gguf/scripts/gguf_dump.py ~/models/gguf/qwen36-reap48-ours-Q4_K_M.gguf | head -100
@@ -535,7 +535,7 @@ python3 ~/llama.cpp/gguf-py/gguf/scripts/gguf_dump.py ~/models/gguf/qwen36-reap4
 
 (External authoring tool; nothing from llama.cpp is shipped. If `--no-tensors` is not a valid flag, use the plain form and take the KV section.) Copy the geometry-relevant keys verbatim: architecture, block_count, `full_attention_interval`, attention head counts / key_length, all `ssm.*` keys, expert_count, expert_used_count, context_length.
 
-- [ ] **Step 3: Author the hybrid vector:** expected values with provenance `"bloomery docs/superpowers/evidence/2026-08-21-reap48-qwen36-spike.md + 2026-08-22-g5v4-reap48-baselines.md (two boots, hardware-verified)"`, verification `hardware-verified`, `must_not_equal`: kv 81920 (note: `"all-40-blocks derivation: R3 violation, fixed bloomery turn 5"`). Verify each expected number against those two bloomery docs (read-only) before freezing; evidence wins over this plan.
+- [ ] **Step 3: Author the hybrid vector:** expected values with provenance `"bloomery docs/superpowers/evidence/2026-08-21-reap48-qwen36-spike.md + 2026-08-22-g5v4-reap48-baselines.md (two boots, hardware-verified)"`, verification `hardware-verified`, `must_not_equal`: kv 81920 (note: `"all-40-blocks derivation — R3 violation, fixed bloomery turn 5"`). Verify each expected number against those two bloomery docs (read-only) before freezing; evidence wins over this plan.
 
 - [ ] **Step 4: Author the mtp-trap vector:** metadata = the hybrid vector's keys PLUS the mtp key at 1 and block_count 41 (the pre-patch trap state, reconstructed); expected `serving_block_count: 40`, kv/attention/recurrent as the hybrid vector; `must_not_equal.serving_block_count: [41]` (note: `"R6: MTP layer counted as a serving layer → unloadable GGUF, bloomery CARRIED-DEBT 2026-08-22"`); `sha_unavailable_reason: "trap state reconstructed from evidence; the patched artifact no longer carries it"`, verification `derived`.
 
@@ -548,7 +548,7 @@ python3 tools/validate_vectors.py vectors/v1
 ```
 Expected: all green, exit 0.
 
-- [ ] **Step 6: Commit:** `git commit -am "feat: v1 vectors, REAP-48 hybrid + mtp trap (10 vectors total)"`
+- [ ] **Step 6: Commit:** `git commit -am "feat: v1 vectors — REAP-48 hybrid + mtp trap (10 vectors total)"`
 
 ---
 
@@ -628,7 +628,7 @@ from assay.geometry import kv_bytes_per_token
 # + the ModelInfo-builder import found in Step 3
 
 DATA = Path(__file__).parent / "data" / "gguf_geometry_v1"
-VENDORED_MANIFEST_SHA = "<sha256 of the vendored MANIFEST.json; fill at vendoring>"
+VENDORED_MANIFEST_SHA = "<sha256 of the vendored MANIFEST.json — fill at vendoring>"
 
 
 def vectors():
